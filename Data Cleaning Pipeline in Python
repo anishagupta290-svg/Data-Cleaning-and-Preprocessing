@@ -1,0 +1,49 @@
+ import pandas as pd
+import numpy as np
+
+# --- STEP 1: DATA INGESTION ---
+df = pd.read_csv('your_dataset.csv')
+print(f"Initial Shape: {df.shape}")
+print(df.info())
+
+# --- STEP 2: DEDUPLICATION ---
+df = df.drop_duplicates()
+print(f"Shape after removing duplicates: {df.shape}")
+
+# --- STEP 3: COLUMN MANAGEMENT ---
+# Drop irrelevant columns (example: 'ID' or 'Notes')
+cols_to_drop = ['id', 'unnecessary_notes'] 
+df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
+df.columns = [col.lower().replace(" ", "_") for col in df.columns] # Rename for clarity
+
+# --- STEP 4: MISSING VALUE HANDLING ---
+# Drop columns with >70% missing
+threshold = 0.7
+df = df.loc[:, df.isnull().mean() < threshold]
+
+# Impute remaining (Numerical: Median, Categorical: Mode)
+for col in df.columns:
+    if df[col].dtype == 'object':
+        df[col] = df[col].fillna(df[col].mode()[0])
+    else:
+        df[col] = df[col].fillna(df[col].median())
+
+# --- STEP 5: DATA TYPE CORRECTION ---
+# Example: Convert date strings to datetime objects
+if 'date_column' in df.columns:
+    df['date_column'] = pd.to_datetime(df['date_column'])
+
+# Fix numerical columns trapped as strings (remove commas/symbols)
+# df['price'] = pd.to_numeric(df['price'].str.replace(',', ''), errors='coerce')
+
+# --- STEP 6: FORMAT STANDARDIZATION ---
+# Normalize text and map variants
+df['gender'] = df['gender'].str.strip().str.capitalize()
+mapping = {'M': 'Male', 'F': 'Female', 'Fem': 'Female'}
+df['gender'] = df['gender'].replace(mapping)
+
+print("Data Cleaning Complete!")
+print(df.head())
+
+ 4. *Missing Value Handling:*
+   * *Pruning:* Removes columns …
